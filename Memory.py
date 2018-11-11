@@ -19,3 +19,9 @@ class Mem:
 
     def fetch_opcode(self, addr):
         return self.memory[addr] << 8 | self.memory[addr + 1]
+
+    def store_byte(self, byte, addr):
+        self.memory[addr] = byte
+
+    def load_byte(self, addr):
+        return self.memory[addr]
