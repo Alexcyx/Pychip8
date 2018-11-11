@@ -1,11 +1,13 @@
 from Config import (
-    MAX_MEMORY
+    MAX_MEMORY, CHIP8_FONTS
 )
 
 
 class Mem:
     def __init__(self):
         self.memory = bytearray(MAX_MEMORY)
+        for i in range(0, 80):
+            self.memory[i] = CHIP8_FONTS[i]
 
     def load_rom(self, rom_file):
         with open(rom_file, 'rb') as f:

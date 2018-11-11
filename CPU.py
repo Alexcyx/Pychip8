@@ -11,6 +11,10 @@ class CPU:
         self.sp = 0
         # Program stack
         self.stack = [0] * 24
+        # Graphics pixel array
+        self.gfx = [0] * 2048
+        # Key array
+        self.key = [0] * 16
         # Program counter and Index register
         self.reg = {
             'I': 0,
@@ -25,6 +29,8 @@ class CPU:
         }
         # Initialize memory
         self.mem = mem
+        # Draw flag
+        self.draw_flag = False
 
     def emulate_cycle(self):
         # Fetch instruction
@@ -75,7 +81,8 @@ class CPU:
     # Instruction 0NNN
     def cpu_0nnn(self):
         if self.op_code == 0x00E0:
-            # TODO disp_clear()
+            self.gfx = [0] * 2048
+            self.draw_flag = True
             self.reg['PC'] += 2
         elif self.op_code == 0x00EE:
             self.sp -= 1
@@ -205,7 +212,20 @@ class CPU:
 
     # Instruction DXYN
     def cpu_dxyn(self):
-        # TODO DXYN
+        x = (self.op_code & 0x0F00) >> 8
+        y = (self.op_code & 0x00F0) >> 4
+        x_val = self.v_reg[x]
+        y_val = self.v_reg[y]
+        height = self.op_code & 0x000F
+        self.v_reg[0xF] = 0
+        for yline in range(0, height):
+            pixel = self.mem.load_byte(self.reg['I'] + yline)
+            for xline in range(0, 8):
+                if pixel & (0x80 >> xline) != 0:
+                    if self.gfx[x_val + xline + (y_val + yline) * 64] == 1:
+                        self.v_reg[0xF] = 1
+                    self.gfx[x_val + xline + (y_val + yline) * 64] ^= 1
+        self.draw_flag = True
         self.reg['PC'] += 2
 
     # Instruction EX9E~EXA1
@@ -213,11 +233,11 @@ class CPU:
         x = (self.op_code & 0x0F00) >> 8
         sec_opcode = self.op_code & 0x00FF
         if sec_opcode == 0x9E:
-            # TODO EX9E
-            pass
+            if self.key[self.v_reg[x]] != 0:
+                self.reg['PC'] += 2
         elif sec_opcode == 0xA1:
-            # TODO EXA1
-            pass
+            if self.key[self.v_reg[x]] == 0:
+                self.reg['PC'] += 2
         else:
             print "Unknown OpCode: " + str(self.op_code)
         self.reg['PC'] += 2
@@ -242,8 +262,7 @@ class CPU:
             else:
                 self.v_reg[0xF] = 0
         elif sec_opcode == 0x29:
-            # TODO FX29
-            pass
+            self.reg['I'] = self.v_reg[x] * 5
         elif sec_opcode == 0x33:
             self.mem.store_byte(self.reg['I'], self.v_reg[x] / 100)
             self.mem.store_byte(self.reg['I'] + 1, self.v_reg[x] / 10 % 10)
