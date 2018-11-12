@@ -1,3 +1,4 @@
 *.pyc
 /c8games/
 .idea/
+.DS_Store
