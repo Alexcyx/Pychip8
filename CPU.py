@@ -1,5 +1,3 @@
-from Memory import Mem
-from Config import START_ADDRESS
 import random
 
 
@@ -76,6 +74,8 @@ class CPU:
         if self.timer['delay'] > 0:
             self.timer['delay'] -= 1
         if self.timer['sound'] > 0:
+            if self.timer['sound'] == 1:
+                print 'Play sound!'
             self.timer['sound'] -= 1
 
     # Instruction 0NNN
@@ -264,9 +264,9 @@ class CPU:
         elif sec_opcode == 0x29:
             self.reg['I'] = self.v_reg[x] * 5
         elif sec_opcode == 0x33:
-            self.mem.store_byte(self.reg['I'], self.v_reg[x] / 100)
-            self.mem.store_byte(self.reg['I'] + 1, self.v_reg[x] / 10 % 10)
-            self.mem.store_byte(self.reg['I'] + 2, self.v_reg[x] % 100 % 10)
+            self.mem.store_byte(self.v_reg[x] / 100, self.reg['I'])
+            self.mem.store_byte(self.v_reg[x] / 10 % 10, self.reg['I'] + 1)
+            self.mem.store_byte(self.v_reg[x] % 100 % 10, self.reg['I'] + 2)
         elif sec_opcode == 0x55:
             for i in range(x + 1):
                 self.mem.store_byte(self.v_reg[i], self.reg['I'] + i)
@@ -287,3 +287,8 @@ class CPU:
             regs += ' V' + str(i) + ': ' + str(hex(self.v_reg[i])).upper()
         ret += regs + '\n'
         return ret
+
+    def display_screen(self):
+        for i in range(0, 31):
+            print str(self.gfx[i * 64:(i + 1) * 64]) + '\n'
+        print '\n'
